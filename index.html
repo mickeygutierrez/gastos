@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="es" class="h-100" data-bs-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gastos y Ganancias AyS</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body,
+      html {
+        height: 100%;
+        background-color: #121212;
+        color: #e0e0e0;
+      }
+      .totals-card {
+        min-width: 160px;
+        text-align: center;
+        margin: 0 5px;
+      }
+      .totals-card h5 {
+        font-weight: 700;
+      }
+      .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+      }
+      /* Tabla con scroll horizontal en móvil */
+      .table-responsive {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body class="d-flex flex-column min-vh-100">
+    <div class="container my-3">
+      <!-- Totales + boton variables -->
+      <div
+        class="d-flex align-items-center justify-content-center flex-wrap gap-2 mb-3"
+      >
+        <div class="card totals-card bg-primary text-white shadow-sm">
+          <div class="card-body py-2">
+            <h5>Total Venta</h5>
+            <p id="totalVenta" class="fs-4">0.00</p>
+          </div>
+        </div>
+        <div class="card totals-card bg-danger text-white shadow-sm">
+          <div class="card-body py-2">
+            <h5>Total Gastos de Viaje</h5>
+            <p id="totalGastosViaje" class="fs-4">0.00</p>
+          </div>
+        </div>
+        <div class="card totals-card bg-success text-white shadow-sm">
+          <div class="card-body py-2">
+            <h5>Total Ahorro Común</h5>
+            <p id="totalAhorroComun" class="fs-4">0.00</p>
+          </div>
+        </div>
+        <div class="card totals-card bg-warning text-dark shadow-sm">
+          <div class="card-body py-2">
+            <h5>Total Ahorro para Deudas</h5>
+            <p id="totalAhorroDeudas" class="fs-4">0.00</p>
+          </div>
+        </div>
+        <div class="card totals-card bg-info text-dark shadow-sm">
+          <div class="card-body py-2">
+            <h5>Total Monto para Tela</h5>
+            <p id="totalMontoTela" class="fs-4">0</p>
+          </div>
+        </div>
+
+        <button
+          class="btn btn-outline-light btn-sm ms-2"
+          data-bs-toggle="modal"
+          data-bs-target="#modalVariables"
+          title="Editar Variables"
+        >
+          Variables ⚙️
+        </button>
+      </div>
+
+      <!-- Formulario venta -->
+      <form id="formVenta" class="mb-4">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label for="fechaVenta" class="form-label">Fecha de Venta</label>
+            <input type="date" id="fechaVenta" class="form-control" required />
+          </div>
+          <div class="col-md-5">
+            <label for="detalleVenta" class="form-label"
+              >Detalle de Venta</label
+            >
+            <input
+              type="text"
+              id="detalleVenta"
+              class="form-control"
+              placeholder="Descripción"
+            />
+          </div>
+          <div class="col-md-2">
+            <label for="montoVenta" class="form-label">Total Venta</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              id="montoVenta"
+              class="form-control"
+              required
+              placeholder="0.00"
+            />
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-success w-100">
+              Agregar Venta
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Botones acciones -->
+      <div class="mb-3 d-flex gap-2 flex-wrap">
+        <button
+          class="btn btn-outline-danger"
+          data-bs-toggle="modal"
+          data-bs-target="#modalGastos"
+        >
+          Agregar Gasto
+        </button>
+        <button
+          class="btn btn-outline-success"
+          data-bs-toggle="modal"
+          data-bs-target="#modalAhorroComun"
+        >
+          Definir Ahorro Común
+        </button>
+        <button
+          class="btn btn-outline-warning text-dark"
+          data-bs-toggle="modal"
+          data-bs-target="#modalAhorroDeudas"
+        >
+          Definir Ahorro para Deudas
+        </button>
+        <button
+          class="btn btn-outline-info text-dark ms-auto"
+          data-bs-toggle="modal"
+          data-bs-target="#modalResumen"
+        >
+          Mostrar Datos Ingresados
+        </button>
+      </div>
+
+      <!-- Tabla resumen -->
+      <div class="table-responsive bg-dark rounded shadow-sm p-2">
+        <table
+          class="table table-striped table-dark table-bordered align-middle text-center mb-0"
+          id="tablaResumen"
+        >
+          <thead>
+            <tr>
+              <th>Detalle</th>
+              <th>Debe</th>
+              <th>Haber</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Aquí se agregan filas dinámicas -->
+          </tbody>
+          <tfoot class="table-light text-dark fw-bold">
+            <tr>
+              <td>Totales</td>
+              <td id="sumaDebe">0.00</td>
+              <td id="sumaHaber">0.00</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal Variables -->
+    <div
+      class="modal fade"
+      id="modalVariables"
+      tabindex="-1"
+      aria-labelledby="modalVariablesLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <form id="formVariables" class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalVariablesLabel">
+              Editar Variables
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="costoTela" class="form-label"
+                >Costo de Kg. de Tela</label
+              >
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                id="costoTela"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="costoPrenda" class="form-label"
+                >Costo de Venta por Prenda</label
+              >
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                id="costoPrenda"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="prendasPorKg" class="form-label"
+                >Cantidad de Prendas por Kg.</label
+              >
+              <input
+                type="number"
+                min="1"
+                step="1"
+                id="prendasPorKg"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Agregar Gasto -->
+    <div
+      class="modal fade"
+      id="modalGastos"
+      tabindex="-1"
+      aria-labelledby="modalGastosLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <form id="formGasto" class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalGastosLabel">
+              Agregar Gasto de Viaje
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="detalleGasto" class="form-label"
+                >Detalle del Gasto</label
+              >
+              <input
+                type="text"
+                id="detalleGasto"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="montoGasto" class="form-label"
+                >Monto Total del Gasto</label
+              >
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                id="montoGasto"
+                class="form-control"
+                required
+              />
+              <small id="gastoHelp" class="form-text text-muted"></small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-danger">Agregar Gasto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Ahorro Comun -->
+    <div
+      class="modal fade"
+      id="modalAhorroComun"
+      tabindex="-1"
+      aria-labelledby="modalAhorroComunLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <form id="formAhorroComun" class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalAhorroComunLabel">
+              Definir Ahorro Común
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              Monto disponible para gastar:
+              <span id="disponibleParaGastoComun">0.00</span>
+            </p>
+            <div class="mb-3">
+              <label for="montoAhorroComun" class="form-label"
+                >Monto a Guardar</label
+              >
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                id="montoAhorroComun"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-success">
+              Guardar Ahorro
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Ahorro Deudas -->
+    <div
+      class="modal fade"
+      id="modalAhorroDeudas"
+      tabindex="-1"
+      aria-labelledby="modalAhorroDeudasLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <form id="formAhorroDeudas" class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalAhorroDeudasLabel">
+              Definir Ahorro para Deudas
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              Monto disponible para gastar:
+              <span id="disponibleParaGastoDeudas">0.00</span>
+            </p>
+            <div class="mb-3">
+              <label for="montoAhorroDeudas" class="form-label"
+                >Monto a Guardar</label
+              >
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                id="montoAhorroDeudas"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-warning text-dark">
+              Guardar Ahorro
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Resumen Datos -->
+    <div
+      class="modal fade"
+      id="modalResumen"
+      tabindex="-1"
+      aria-labelledby="modalResumenLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-secondary text-white">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalResumenLabel">
+              Resumen de Datos Ingresados
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            ></button>
+          </div>
+          <div
+            class="modal-body"
+            id="contenidoResumen"
+            style="max-height: 400px; overflow-y: auto"
+          >
+            <!-- Datos se cargarán aquí -->
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-light" data-bs-dismiss="modal">
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      (() => {
+        // Variables iniciales
+        let costoKgTela = 65;
+        let costoVentaPrenda = 13.5;
+        let prendasPorKg = 18;
+
+        // Datos acumulados
+        let totalVenta = 0;
+        let totalGastosViaje = 0;
+        let totalAhorroComun = 0;
+        let totalAhorroDeudas = 0;
+        let totalMontoTela = 0;
+
+        // Array para almacenar movimientos
+        // Cada elemento: {id, detalle, debe, haber, tipo}
+        // tipo puede ser: 'venta', 'monto_tela', 'gasto', 'ahorro_comun', 'ahorro_deudas'
+        let movimientos = [];
+        let idCounter = 1;
+
+        // Referencias DOM
+        const totalVentaEl = document.getElementById("totalVenta");
+        const totalGastosViajeEl = document.getElementById("totalGastosViaje");
+        const totalAhorroComunEl = document.getElementById("totalAhorroComun");
+        const totalAhorroDeudasEl =
+          document.getElementById("totalAhorroDeudas");
+        const totalMontoTelaEl = document.getElementById("totalMontoTela");
+        const tablaBody = document.querySelector("#tablaResumen tbody");
+        const sumaDebeEl = document.getElementById("sumaDebe");
+        const sumaHaberEl = document.getElementById("sumaHaber");
+
+        // Variables modal
+        const costoTelaInput = document.getElementById("costoTela");
+        const costoPrendaInput = document.getElementById("costoPrenda");
+        const prendasPorKgInput = document.getElementById("prendasPorKg");
+
+        // Modal gastos
+        const detalleGastoInput = document.getElementById("detalleGasto");
+        const montoGastoInput = document.getElementById("montoGasto");
+        const gastoHelp = document.getElementById("gastoHelp");
+
+        // Modal ahorro comun
+        const disponibleParaGastoComunEl = document.getElementById(
+          "disponibleParaGastoComun"
+        );
+        const montoAhorroComunInput =
+          document.getElementById("montoAhorroComun");
+
+        // Modal ahorro deudas
+        const disponibleParaGastoDeudasEl = document.getElementById(
+          "disponibleParaGastoDeudas"
+        );
+        const montoAhorroDeudasInput =
+          document.getElementById("montoAhorroDeudas");
+
+        // Modal resumen
+        const contenidoResumen = document.getElementById("contenidoResumen");
+
+        // Función para actualizar los totales en la parte superior
+        function actualizarTotales() {
+          totalVenta = movimientos
+            .filter((m) => m.tipo === "venta")
+            .reduce((acc, m) => acc + m.haber, 0);
+          totalGastosViaje = movimientos
+            .filter((m) => m.tipo === "gasto")
+            .reduce((acc, m) => acc + m.debe, 0);
+          totalAhorroComun = movimientos
+            .filter((m) => m.tipo === "ahorro_comun")
+            .reduce((acc, m) => acc + m.debe, 0);
+          totalAhorroDeudas = movimientos
+            .filter((m) => m.tipo === "ahorro_deudas")
+            .reduce((acc, m) => acc + m.debe, 0);
+          totalMontoTela = movimientos
+            .filter((m) => m.tipo === "monto_tela")
+            .reduce((acc, m) => acc + m.debe, 0);
+
+          totalVentaEl.textContent = totalVenta.toFixed(2);
+          totalGastosViajeEl.textContent = totalGastosViaje.toFixed(2);
+          totalAhorroComunEl.textContent = totalAhorroComun.toFixed(2);
+          totalAhorroDeudasEl.textContent = totalAhorroDeudas.toFixed(2);
+          totalMontoTelaEl.textContent = totalMontoTela.toFixed(0); // redondeado entero
+        }
+
+        // Función para calcular monto disponible para gastos (venta - gastos - ahorros - monto para tela)
+        function calcularDisponibleParaGasto() {
+          return (
+            totalVenta -
+            totalGastosViaje -
+            totalAhorroComun -
+            totalAhorroDeudas -
+            totalMontoTela
+          );
+        }
+
+        // Función para actualizar el texto de monto disponible en modales
+        function actualizarDisponiblesModal() {
+          const disp = calcularDisponibleParaGasto();
+          disponibleParaGastoComunEl.textContent = disp.toFixed(2);
+          disponibleParaGastoDeudasEl.textContent = disp.toFixed(2);
+
+          // Actualizamos el texto de ayuda en modal gasto
+          gastoHelp.textContent = `Máximo permitido: ${disp.toFixed(2)}`;
+          montoGastoInput.max = disp.toFixed(2);
+        }
+
+        // Función para limpiar formulario venta
+        function limpiarFormularioVenta() {
+          document.getElementById("fechaVenta").value = "";
+          document.getElementById("detalleVenta").value = "";
+          document.getElementById("montoVenta").value = "";
+        }
+
+        // Función para crear fila en tabla
+        function crearFila(mov) {
+          const tr = document.createElement("tr");
+          tr.dataset.id = mov.id;
+
+          const tdDetalle = document.createElement("td");
+          tdDetalle.textContent = mov.detalle;
+
+          const tdDebe = document.createElement("td");
+          tdDebe.textContent = mov.debe ? mov.debe.toFixed(2) : "0.00";
+
+          const tdHaber = document.createElement("td");
+          tdHaber.textContent = mov.haber ? mov.haber.toFixed(2) : "0.00";
+
+          const tdAcciones = document.createElement("td");
+          // Solo permitir editar/eliminar gastos y ahorros para evitar errores en ventas y monto para tela
+          if (
+            mov.tipo === "gasto" ||
+            mov.tipo === "ahorro_comun" ||
+            mov.tipo === "ahorro_deudas"
+          ) {
+            // Botón eliminar
+            const btnEliminar = document.createElement("button");
+            btnEliminar.className = "btn btn-sm btn-danger me-1";
+            btnEliminar.textContent = "Eliminar";
+            btnEliminar.addEventListener("click", () => {
+              eliminarMovimiento(mov.id);
+            });
+            tdAcciones.appendChild(btnEliminar);
+
+            // Botón editar
+            const btnEditar = document.createElement("button");
+            btnEditar.className = "btn btn-sm btn-warning text-dark";
+            btnEditar.textContent = "Editar";
+            btnEditar.addEventListener("click", () => {
+              editarMovimiento(mov.id);
+            });
+            tdAcciones.appendChild(btnEditar);
+          } else {
+            tdAcciones.textContent = "-";
+          }
+
+          tr.appendChild(tdDetalle);
+          tr.appendChild(tdDebe);
+          tr.appendChild(tdHaber);
+          tr.appendChild(tdAcciones);
+
+          return tr;
+        }
+
+        // Función para renderizar tabla completa
+        function renderTabla() {
+          tablaBody.innerHTML = "";
+          movimientos.forEach((mov) => {
+            tablaBody.appendChild(crearFila(mov));
+          });
+          // Actualizamos sumas
+          const sumaDebe = movimientos.reduce(
+            (acc, m) => acc + (m.debe || 0),
+            0
+          );
+          const sumaHaber = movimientos.reduce(
+            (acc, m) => acc + (m.haber || 0),
+            0
+          );
+          sumaDebeEl.textContent = sumaDebe.toFixed(2);
+          sumaHaberEl.textContent = sumaHaber.toFixed(2);
+        }
+
+        // Función para agregar movimiento a array y refrescar tabla y totales
+        function agregarMovimiento(mov) {
+          mov.id = idCounter++;
+          movimientos.push(mov);
+          actualizarTotales();
+          renderTabla();
+          actualizarDisponiblesModal();
+        }
+
+        // Función para eliminar movimiento
+        function eliminarMovimiento(id) {
+          const index = movimientos.findIndex((m) => m.id === id);
+          if (index !== -1) {
+            movimientos.splice(index, 1);
+            actualizarTotales();
+            renderTabla();
+            actualizarDisponiblesModal();
+          }
+        }
+
+        // Función para editar movimiento (solo gastos y ahorros)
+        function editarMovimiento(id) {
+          const mov = movimientos.find((m) => m.id === id);
+          if (!mov) return;
+
+          if (mov.tipo === "gasto") {
+            detalleGastoInput.value = mov.detalle;
+            montoGastoInput.value = mov.debe.toFixed(2);
+            // Abrir modal gasto
+            const modal = new bootstrap.Modal(
+              document.getElementById("modalGastos")
+            );
+            modal.show();
+
+            // Al guardar, actualizar el movimiento existente en vez de agregar nuevo
+            const formGasto = document.getElementById("formGasto");
+            const handler = (e) => {
+              e.preventDefault();
+
+              const detalle = detalleGastoInput.value.trim();
+              const monto = parseFloat(montoGastoInput.value);
+
+              if (!detalle) {
+                alert("Detalle del gasto es obligatorio");
+                return;
+              }
+              if (isNaN(monto) || monto <= 0) {
+                alert("Monto de gasto debe ser mayor a 0");
+                return;
+              }
+              const disp = calcularDisponibleParaGasto() + mov.debe; // Se puede gastar el monto actual del gasto + lo que hay disponible
+              if (monto > disp) {
+                alert(
+                  `Monto excede el disponible para gasto: ${disp.toFixed(2)}`
+                );
+                return;
+              }
+
+              // Actualizar movimiento
+              mov.detalle = detalle;
+              mov.debe = monto;
+
+              actualizarTotales();
+              renderTabla();
+              actualizarDisponiblesModal();
+              formGasto.removeEventListener("submit", handler);
+              bootstrap.Modal.getInstance(
+                document.getElementById("modalGastos")
+              ).hide();
+            };
+            formGasto.addEventListener("submit", handler, { once: true });
+          }
+
+          if (mov.tipo === "ahorro_comun") {
+            montoAhorroComunInput.value = mov.debe.toFixed(2);
+            const modal = new bootstrap.Modal(
+              document.getElementById("modalAhorroComun")
+            );
+            modal.show();
+
+            const formAhorroComun = document.getElementById("formAhorroComun");
+            const handler = (e) => {
+              e.preventDefault();
+              const monto = parseFloat(montoAhorroComunInput.value);
+              if (isNaN(monto) || monto < 0) {
+                alert("Monto inválido");
+                return;
+              }
+              const disp = calcularDisponibleParaGasto() + mov.debe;
+              if (monto > disp) {
+                alert(
+                  `Monto excede el disponible para gasto: ${disp.toFixed(2)}`
+                );
+                return;
+              }
+
+              mov.debe = monto;
+              actualizarTotales();
+              renderTabla();
+              actualizarDisponiblesModal();
+              formAhorroComun.removeEventListener("submit", handler);
+              bootstrap.Modal.getInstance(
+                document.getElementById("modalAhorroComun")
+              ).hide();
+            };
+            formAhorroComun.addEventListener("submit", handler, { once: true });
+          }
+
+          if (mov.tipo === "ahorro_deudas") {
+            montoAhorroDeudasInput.value = mov.debe.toFixed(2);
+            const modal = new bootstrap.Modal(
+              document.getElementById("modalAhorroDeudas")
+            );
+            modal.show();
+
+            const formAhorroDeudas =
+              document.getElementById("formAhorroDeudas");
+            const handler = (e) => {
+              e.preventDefault();
+              const monto = parseFloat(montoAhorroDeudasInput.value);
+              if (isNaN(monto) || monto < 0) {
+                alert("Monto inválido");
+                return;
+              }
+              const disp = calcularDisponibleParaGasto() + mov.debe;
+              if (monto > disp) {
+                alert(
+                  `Monto excede el disponible para gasto: ${disp.toFixed(2)}`
+                );
+                return;
+              }
+
+              mov.debe = monto;
+              actualizarTotales();
+              renderTabla();
+              actualizarDisponiblesModal();
+              formAhorroDeudas.removeEventListener("submit", handler);
+              bootstrap.Modal.getInstance(
+                document.getElementById("modalAhorroDeudas")
+              ).hide();
+            };
+            formAhorroDeudas.addEventListener("submit", handler, {
+              once: true,
+            });
+          }
+        }
+
+        // Formulario variables
+        document
+          .getElementById("formVariables")
+          .addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const ct = parseFloat(costoTelaInput.value);
+            const cp = parseFloat(costoPrendaInput.value);
+            const pk = parseInt(prendasPorKgInput.value);
+
+            if (isNaN(ct) || ct <= 0) {
+              alert("Costo de Kg. de tela debe ser mayor a 0");
+              return;
+            }
+            if (isNaN(cp) || cp <= 0) {
+              alert("Costo de venta por prenda debe ser mayor a 0");
+              return;
+            }
+            if (isNaN(pk) || pk <= 0) {
+              alert("Cantidad de prendas por Kg. debe ser mayor a 0");
+              return;
+            }
+
+            costoKgTela = ct;
+            costoVentaPrenda = cp;
+            prendasPorKg = pk;
+
+            // Guardamos para recalcular montos para tela (actualizamos las filas)
+            // Para simplificar: eliminamos todos los movimientos de tipo monto_tela y volvemos a calcular para cada venta
+            movimientos = movimientos.filter((m) => m.tipo !== "monto_tela");
+
+            movimientos
+              .filter((m) => m.tipo === "venta")
+              .forEach((movVenta) => {
+                const montoParaTela = calcularMontoParaTela(movVenta.haber);
+                movimientos.push({
+                  id: idCounter++,
+                  detalle: "Monto para Tela",
+                  debe: montoParaTela,
+                  haber: 0,
+                  tipo: "monto_tela",
+                });
+              });
+
+            actualizarTotales();
+            renderTabla();
+            actualizarDisponiblesModal();
+
+            bootstrap.Modal.getInstance(
+              document.getElementById("modalVariables")
+            ).hide();
+          });
+
+        // Cargar variables iniciales en modal
+        document
+          .getElementById("modalVariables")
+          .addEventListener("show.bs.modal", () => {
+            costoTelaInput.value = costoKgTela;
+            costoPrendaInput.value = costoVentaPrenda;
+            prendasPorKgInput.value = prendasPorKg;
+          });
+
+        // Formulario venta
+        document.getElementById("formVenta").addEventListener("submit", (e) => {
+          e.preventDefault();
+
+          const fecha = document.getElementById("fechaVenta").value;
+          const detalle =
+            document.getElementById("detalleVenta").value.trim() ||
+            "Total venta";
+          const monto = parseFloat(document.getElementById("montoVenta").value);
+
+          if (!fecha) {
+            alert("Fecha de venta es obligatoria");
+            return;
+          }
+          if (isNaN(monto) || monto <= 0) {
+            alert("Monto de venta debe ser mayor a 0");
+            return;
+          }
+
+          // Agregar movimiento venta (haber)
+          agregarMovimiento({
+            detalle,
+            debe: 0,
+            haber: monto,
+            tipo: "venta",
+            fecha,
+          });
+
+          // Calcular monto para tela
+          const montoParaTela = calcularMontoParaTela(monto);
+          agregarMovimiento({
+            detalle: "Monto para Tela",
+            debe: montoParaTela,
+            haber: 0,
+            tipo: "monto_tela",
+          });
+
+          limpiarFormularioVenta();
+        });
+
+        // Función para calcular monto para tela redondeado entero
+        function calcularMontoParaTela(montoVenta) {
+          let resultado =
+            (montoVenta / costoVentaPrenda / prendasPorKg) * costoKgTela;
+          return Math.round(resultado);
+        }
+
+        // Formulario gasto
+        document.getElementById("formGasto").addEventListener("submit", (e) => {
+          e.preventDefault();
+
+          const detalle = detalleGastoInput.value.trim();
+          const monto = parseFloat(montoGastoInput.value);
+
+          if (!detalle) {
+            alert("Detalle del gasto es obligatorio");
+            return;
+          }
+          if (isNaN(monto) || monto <= 0) {
+            alert("Monto de gasto debe ser mayor a 0");
+            return;
+          }
+
+          const disp = calcularDisponibleParaGasto();
+          if (monto > disp) {
+            alert(`Monto excede el disponible para gasto: ${disp.toFixed(2)}`);
+            return;
+          }
+
+          agregarMovimiento({
+            detalle,
+            debe: monto,
+            haber: 0,
+            tipo: "gasto",
+          });
+
+          detalleGastoInput.value = "";
+          montoGastoInput.value = "";
+          bootstrap.Modal.getInstance(
+            document.getElementById("modalGastos")
+          ).hide();
+        });
+
+        // Modal abrir: actualizar máximo y texto ayuda gasto
+        document
+          .getElementById("modalGastos")
+          .addEventListener("show.bs.modal", () => {
+            actualizarDisponiblesModal();
+            detalleGastoInput.value = "";
+            montoGastoInput.value = "";
+          });
+
+        // Formulario ahorro comun
+        document
+          .getElementById("formAhorroComun")
+          .addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const monto = parseFloat(montoAhorroComunInput.value);
+            if (isNaN(monto) || monto < 0) {
+              alert("Monto inválido");
+              return;
+            }
+            const disp = calcularDisponibleParaGasto();
+            if (monto > disp) {
+              alert(
+                `Monto excede el disponible para gasto: ${disp.toFixed(2)}`
+              );
+              return;
+            }
+            // Agregar movimiento ahorro comun (debe)
+            agregarMovimiento({
+              detalle: "Monto de ahorro común",
+              debe: monto,
+              haber: 0,
+              tipo: "ahorro_comun",
+            });
+
+            montoAhorroComunInput.value = "";
+            bootstrap.Modal.getInstance(
+              document.getElementById("modalAhorroComun")
+            ).hide();
+          });
+
+        // Modal abrir ahorro comun actualizar monto disponible
+        document
+          .getElementById("modalAhorroComun")
+          .addEventListener("show.bs.modal", () => {
+            actualizarDisponiblesModal();
+            montoAhorroComunInput.value = "";
+          });
+
+        // Formulario ahorro deudas
+        document
+          .getElementById("formAhorroDeudas")
+          .addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const monto = parseFloat(montoAhorroDeudasInput.value);
+            if (isNaN(monto) || monto < 0) {
+              alert("Monto inválido");
+              return;
+            }
+            const disp = calcularDisponibleParaGasto();
+            if (monto > disp) {
+              alert(
+                `Monto excede el disponible para gasto: ${disp.toFixed(2)}`
+              );
+              return;
+            }
+            // Agregar movimiento ahorro deudas (debe)
+            agregarMovimiento({
+              detalle: "Monto de ahorro para deudas",
+              debe: monto,
+              haber: 0,
+              tipo: "ahorro_deudas",
+            });
+
+            montoAhorroDeudasInput.value = "";
+            bootstrap.Modal.getInstance(
+              document.getElementById("modalAhorroDeudas")
+            ).hide();
+          });
+
+        // Modal abrir ahorro deudas actualizar monto disponible
+        document
+          .getElementById("modalAhorroDeudas")
+          .addEventListener("show.bs.modal", () => {
+            actualizarDisponiblesModal();
+            montoAhorroDeudasInput.value = "";
+          });
+
+        // Modal resumen mostrar todos los datos en formato estético
+        document
+          .getElementById("modalResumen")
+          .addEventListener("show.bs.modal", () => {
+            let html = "";
+            if (movimientos.length === 0) {
+              html = "<p>No hay datos ingresados.</p>";
+            } else {
+              html += '<ul class="list-group">';
+              movimientos.forEach((mov) => {
+                html += `<li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">
+              <div><strong>${mov.detalle}</strong> (${mov.tipo.replace(
+                  "_",
+                  " "
+                )})</div>
+              <div>
+                <span class="badge bg-success me-2">Haber: ${
+                  mov.haber ? mov.haber.toFixed(2) : "0.00"
+                }</span>
+                <span class="badge bg-danger">Debe: ${
+                  mov.debe ? mov.debe.toFixed(2) : "0.00"
+                }</span>
+              </div>
+            </li>`;
+              });
+              html += "</ul>";
+            }
+            contenidoResumen.innerHTML = html;
+          });
+
+        // Inicializamos variables en modal variables
+        document.addEventListener("DOMContentLoaded", () => {
+          actualizarTotales();
+          renderTabla();
+          actualizarDisponiblesModal();
+        });
+      })();
+    </script>
+  </body>
+</html>
